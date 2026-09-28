@@ -10,7 +10,7 @@
 # CMake's behaviour is compatible with the named version. This is a standard CMake command, so more
 # information can be found in the CMake docs.
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
 
 # The top-level CMakeLists.txt file for a project must contain a literal, direct call to the
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
@@ -33,7 +33,9 @@ project(CONSOLE_APP_EXAMPLE VERSION 0.0.1)
 # `docs/CMake API.md` in the JUCE repo for the full list.
 
 juce_add_console_app(ConsoleAppExample
-    PRODUCT_NAME "Console App Example")     # The name of the final executable, which can differ from the target name
+    PRODUCT_NAME "Console App Example"      # The name of the final executable, which can differ from the target name
+    NEEDS_WEB_BROWSER FALSE                 # Set to TRUE if you need to use webviews
+    NEEDS_CURL FALSE)                       # Set to TRUE if you need to use curl
 
 # `juce_generate_juce_header` will create a JuceHeader.h for a given target, which will be generated
 # into the build tree. This header should be included with `#include <JuceHeader.h>`. The include

@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-9-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -26,8 +35,8 @@
 #pragma once
 
 //==============================================================================
-class ConcertinaHeader    : public Component,
-                            public ChangeBroadcaster
+class ConcertinaHeader final : public Component,
+                               public ChangeBroadcaster
 {
 public:
     ConcertinaHeader (String n, Path p)
@@ -98,9 +107,9 @@ private:
 };
 
 //==============================================================================
-class FindPanel    : public Component,
-                     private Timer,
-                     private FocusChangeListener
+class FindPanel final : public Component,
+                        private Timer,
+                        private FocusChangeListener
 {
 public:
     FindPanel (std::function<void (const String&)> cb)
@@ -172,7 +181,7 @@ private:
 };
 
 //==============================================================================
-class ConcertinaTreeComponent    : public Component
+class ConcertinaTreeComponent final : public Component
 {
 public:
     class AdditionalComponents
@@ -185,7 +194,7 @@ public:
             findPanel      = (1 << 2)
         };
 
-        AdditionalComponents with (Type t)
+        [[nodiscard]] AdditionalComponents with (Type t)
         {
             auto copy = *this;
             copy.componentTypes |= t;
@@ -296,8 +305,8 @@ private:
 
 
 //==============================================================================
-struct ProjectSettingsComponent  : public Component,
-                                   private ChangeListener
+struct ProjectSettingsComponent final : public Component,
+                                        private ChangeListener
 {
     ProjectSettingsComponent (Project& p)
         : project (p),
@@ -331,13 +340,14 @@ struct ProjectSettingsComponent  : public Component,
         group.setProperties (props);
         group.setName ("Project Settings");
 
-        lastProjectType = project.getProjectTypeString();
         parentSizeChanged();
     }
 
     void changeListenerCallback (ChangeBroadcaster*) override
     {
-        if (lastProjectType != project.getProjectTypeString())
+        const auto next = getProjectStatesRequiringRebuild();
+
+        if (std::exchange (states, next) != next)
             updatePropertyList();
     }
 
@@ -351,15 +361,37 @@ struct ProjectSettingsComponent  : public Component,
         setSize (width, y);
     }
 
+    struct StatesRequiringPropertyRebuild
+    {
+        var projectType;
+        var enableARA;
+
+        bool operator== (const StatesRequiringPropertyRebuild& other) const
+        {
+            const auto tie = [] (auto& x) { return std::tuple (x.projectType, x.enableARA); };
+            return tie (*this) == tie (other);
+        }
+
+        bool operator!= (const StatesRequiringPropertyRebuild& other) const
+        {
+            return ! operator== (other);
+        }
+    };
+
+    StatesRequiringPropertyRebuild getProjectStatesRequiringRebuild() const
+    {
+        return { project.getProjectTypeString(), project.shouldEnableARA() };
+    }
+
     Project& project;
-    var lastProjectType;
+    StatesRequiringPropertyRebuild states = getProjectStatesRequiringRebuild();
     PropertyGroupComponent group;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectSettingsComponent)
 };
 
 //==============================================================================
-struct FileTreePanel   : public TreePanelBase
+struct FileTreePanel final : public TreePanelBase
 {
     FileTreePanel (Project& p)
         : TreePanelBase (&p, "fileTreeState")
@@ -376,7 +408,7 @@ struct FileTreePanel   : public TreePanelBase
     }
 };
 
-struct ModuleTreePanel    : public TreePanelBase
+struct ModuleTreePanel final : public TreePanelBase
 {
     ModuleTreePanel (Project& p)
         : TreePanelBase (&p, "moduleTreeState")
@@ -387,7 +419,7 @@ struct ModuleTreePanel    : public TreePanelBase
     }
 };
 
-struct ExportersTreePanel    : public TreePanelBase
+struct ExportersTreePanel final : public TreePanelBase
 {
     ExportersTreePanel (Project& p)
         : TreePanelBase (&p, "exportersTreeState")
@@ -399,8 +431,8 @@ struct ExportersTreePanel    : public TreePanelBase
 };
 
 //==============================================================================
-class Sidebar    : public Component,
-                   private ChangeListener
+class Sidebar final : public Component,
+                      private ChangeListener
 {
 public:
     Sidebar (Project* p)
@@ -552,8 +584,8 @@ private:
     }
 
     //==============================================================================
-    ConcertinaPanel concertinaPanel;
     std::vector<std::unique_ptr<ConcertinaHeader>> headers;
+    ConcertinaPanel concertinaPanel;
     Project* project = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Sidebar)

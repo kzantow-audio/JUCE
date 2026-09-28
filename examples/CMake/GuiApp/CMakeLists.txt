@@ -9,7 +9,7 @@
 # CMake's behaviour is compatible with the named version. This is a standard CMake command, so more
 # information can be found in the CMake docs.
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
 
 # The top-level CMakeLists.txt file for a project must contain a literal, direct call to the
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
@@ -42,7 +42,9 @@ juce_add_gui_app(GuiAppExample
     # ICON_SMALL ...
     # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be associated with this app
     # COMPANY_NAME ...                  # Specify the name of the app's author
-    PRODUCT_NAME "Gui App Example")     # The name of the final executable, which can differ from the target name
+    PRODUCT_NAME "Gui App Example"      # The name of the final executable, which can differ from the target name
+    NEEDS_WEB_BROWSER FALSE             # Set to TRUE if you need to use webviews
+    NEEDS_CURL FALSE)                   # Set to TRUE if you need to use curl
 
 # `juce_generate_juce_header` will create a JuceHeader.h for a given target, which will be generated
 # into your build tree. This should be included with `#include <JuceHeader.h>`. The include path for
